@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Room Entry & Stand-Up Tilt Angle Calculator</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #38bdf8;
+      --success-bg: #14532d;
+      --success-text: #4ade80;
+      --success-border: #22c55e;
+      --danger-bg: #7f1d1d;
+      --danger-text: #fca5a5;
+      --danger-border: #ef4444;
+      --warning-bg: #713f12;
+      --warning-text: #fde047;
+      --warning-border: #eab308;
+      --canvas-bg: #090d16;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 24px; line-height: 1.5; min-height: 100vh; }
+
+    .header { max-width: 1240px; margin: 0 auto 24px auto; border-bottom: 1px solid var(--card-border); padding-bottom: 16px; }
+    .header h1 { font-size: 1.75rem; font-weight: 700; color: var(--text); }
+    .header p { color: var(--text-muted); font-size: 0.95rem; margin-top: 4px; }
+
+    .layout { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: 380px 1fr; gap: 24px; }
+    @media (max-width: 960px) { .layout { grid-template-columns: 1fr; } }
+
+    .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); }
+    .card h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 16px; border-bottom: 1px solid var(--card-border); padding-bottom: 8px; color: var(--primary); }
+
+    .unit-toggle { display: flex; background: #0f172a; padding: 4px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--card-border); }
+    .unit-btn { flex: 1; padding: 8px; border: none; background: transparent; color: var(--text-muted); font-weight: 600; cursor: pointer; border-radius: 6px; font-size: 0.85rem; }
+    .unit-btn.active { background: var(--primary); color: #0f172a; }
+
+    .input-group { margin-bottom: 16px; }
+    .input-label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .input-label-row label { font-size: 0.85rem; font-weight: 500; color: var(--text-muted); }
+    .input-label-row span { font-size: 0.85rem; font-weight: 600; color: var(--primary); }
+
+    .input-control-row { display: flex; gap: 12px; align-items: center; }
+    .input-control-row input[type="number"] { width: 90px; padding: 6px 10px; background: #0f172a; border: 1px solid var(--card-border); border-radius: 6px; color: var(--text); font-size: 0.9rem; text-align: right; }
+    .input-control-row input[type="range"] { flex: 1; accent-color: var(--primary); cursor: pointer; }
+
+    .main-verdict { padding: 18px; border-radius: 10px; text-align: center; margin-bottom: 20px; border: 2px solid transparent; letter-spacing: 0.5px; }
+    .main-verdict .title { font-size: 1.25rem; font-weight: 800; margin-bottom: 4px; }
+    .main-verdict .subtitle { font-size: 0.95rem; font-weight: 600; opacity: 0.95; }
+    
+    .verdict-pass { background-color: var(--success-bg); color: var(--success-text); border-color: var(--success-border); }
+    .verdict-fail { background-color: var(--danger-bg); color: var(--danger-text); border-color: var(--danger-border); }
+
+    .tilt-card { background: #090d16; border: 1px solid var(--card-border); border-radius: 8px; padding: 14px; margin-bottom: 20px; }
+    .tilt-card h3 { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; letter-spacing: 0.5px; }
+    .tilt-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+    .tilt-item { background: #1e293b; padding: 10px; border-radius: 6px; border: 1px solid var(--card-border); }
+    .tilt-item .lbl { font-size: 0.75rem; color: var(--text-muted); }
+    .tilt-item .val { font-size: 1.05rem; font-weight: 700; color: var(--primary); margin-top: 2px; }
+
+    .canvas-container { width: 100%; position: relative; border-radius: 8px; overflow: hidden; border: 1px solid var(--card-border); background: var(--canvas-bg); }
+    canvas { display: block; width: 100%; height: 400px; }
+
+    .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--card-border); font-size: 0.8rem; color: var(--text-muted); }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .legend-color { width: 12px; height: 12px; border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Room Entry & Stand-Up Tilt Angle Calculator</h1>
+  <p>Automatically calculates whether you can roll an object into a room and turn it upright, including the exact backward tilt angle required.</p>
+</div>
+
+<div class="layout">
+  <!-- Controls Panel -->
+  <div class="card">
+    <h2>Spatial Dimensions</h2>
+
+    <div class="unit-toggle">
+      <button class="unit-btn active" id="btn-cm" onclick="setUnit('cm')">Centimeters (cm)</button>
+      <button class="unit-btn" id="btn-m" onclick="setUnit('m')">Meters (m)</button>
+    </div>
+
+    <div id="controls"></div>
+  </div>
+
+  <!-- Output Panel -->
+  <div class="card">
+    <h2>Clearance & Required Tilt Angle</h2>
+    
+    <!-- Overall Verdict -->
+    <div id="main-verdict" class="main-verdict verdict-pass">
+      <div class="title" id="verdict-title">CALCULATING...</div>
+      <div class="subtitle" id="verdict-subtitle">Analyzing entry trajectory...</div>
+    </div>
+
+    <!-- Required Tilt Breakdown -->
+    <div class="tilt-card">
+      <h3>Calculated Backward Tilt Angle (Towards Push Operator)</h3>
+      <div class="tilt-grid">
+        <div class="tilt-item">
+          <div class="lbl">Recommended Tilt Angle</div>
+          <div class="val" id="recommended-tilt-val">-</div>
+        </div>
+        <div class="tilt-item">
+          <div class="lbl">Valid Tilt Angle Range</div>
+          <div class="val" id="tilt-range-val">-</div>
+        </div>
+        <div class="tilt-item">
+          <div class="lbl">Current Manual Tilt</div>
+          <div class="val" id="current-tilt-val">-</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="canvas-container">
+      <canvas id="schematicCanvas"></canvas>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-color" style="background: #1e293b; border: 1px solid #334155;"></div> Hallway (Outside)</div>
+      <div class="legend-item"><div class="legend-color" style="background: rgba(56, 189, 248, 0.4); border: 1px solid #38bdf8;"></div> Tilted Entry (Towards Operator)</div>
+      <div class="legend-item"><div class="legend-color" style="background: rgba(34, 197, 94, 0.4); border: 1px solid #22c55e;"></div> Target Upright Position</div>
+      <div class="legend-item"><div class="legend-color" style="background: rgba(234, 179, 8, 0.4); border: 1px dashed #eab308;"></div> In-Room Turning Arc</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentUnit = 'cm';
+
+  const state = {
+    doorHeight: 203,
+    ceilingHeight: 244,
+    wallDistance: 160,
+    objectHeight: 210,
+    objectDepth: 75,
+    cartHeight: 10,
+    manualTilt: 25
+  };
+
+  const fields = [
+    { id: 'doorHeight', label: 'Door Frame Height', min: 100, max: 350 },
+    { id: 'ceilingHeight', label: 'Room Ceiling Height', min: 150, max: 400 },
+    { id: 'wallDistance', label: 'Door to Facing Wall (Inside Room)', min: 30, max: 350 },
+    { id: 'objectHeight', label: 'Object Height', min: 50, max: 350 },
+    { id: 'objectDepth', label: 'Object Depth', min: 20, max: 200 },
+    { id: 'cartHeight', label: 'Cart Height', min: 0, max: 50 },
+    { id: 'manualTilt', label: 'Manual Simulation Tilt', min: 0, max: 90, isAngle: true }
+  ];
+
+  function setUnit(unit) {
+    currentUnit = unit;
+    document.getElementById('btn-cm').classList.toggle('active', unit === 'cm');
+    document.getElementById('btn-m').classList.toggle('active', unit === 'm');
+    renderControls();
+    update();
+  }
+
+  function renderControls() {
+    const container = document.getElementById('controls');
+    container.innerHTML = '';
+
+    fields.forEach(f => {
+      const isAngle = f.isAngle;
+      const displayVal = isAngle ? state[f.id] : (currentUnit === 'm' ? (state[f.id] / 100).toFixed(2) : state[f.id]);
+      const min = isAngle ? f.min : (currentUnit === 'm' ? (f.min / 100).toFixed(2) : f.min);
+      const max = isAngle ? f.max : (currentUnit === 'm' ? (f.max / 100).toFixed(2) : f.max);
+      const step = isAngle ? 1 : (currentUnit === 'm' ? 0.01 : 1);
+      const unitLabel = isAngle ? '°' : currentUnit;
+
+      const group = document.createElement('div');
+      group.className = 'input-group';
+      group.innerHTML = `
+        <div class="input-label-row">
+          <label for="num-${f.id}">${f.label}</label>
+          <span><span id="val-${f.id}">${displayVal}</span> ${unitLabel}</span>
+        </div>
+        <div class="input-control-row">
+          <input type="range" id="range-${f.id}" min="${f.min}" max="${f.max}" value="${state[f.id]}" step="1" oninput="onRangeChange('${f.id}', this.value)">
+          <input type="number" id="num-${f.id}" min="${min}" max="${max}" value="${displayVal}" step="${step}" onchange="onNumChange('${f.id}', this.value)">
+        </div>
+      `;
+      container.appendChild(group);
+    });
+  }
+
+  function onRangeChange(id, val) {
+    state[id] = parseFloat(val);
+    updateDisplayValues();
+    update();
+  }
+
+  function onNumChange(id, val) {
+    let num = parseFloat(val) || 0;
+    if (!fields.find(f => f.id === id).isAngle && currentUnit === 'm') {
+      num = Math.round(num * 100);
+    }
+    state[id] = Math.max(0, num);
+    document.getElementById(`range-${id}`).value = state[id];
+    updateDisplayValues();
+    update();
+  }
+
+  function updateDisplayValues() {
+    fields.forEach(f => {
+      const isAngle = f.isAngle;
+      const displayVal = isAngle ? state[f.id] : (currentUnit === 'm' ? (state[f.id] / 100).toFixed(2) : state[f.id]);
+      document.getElementById(`val-${f.id}`).textContent = displayVal;
+      document.getElementById(`num-${f.id}`).value = displayVal;
+    });
+  }
+
+  function formatValue(cm) {
+    return currentUnit === 'm' ? `${(cm / 100).toFixed(2)} m` : `${Math.round(cm)} cm`;
+  }
+
+  function calculateClearanceAtTilt(deg) {
+    const rad = (deg * Math.PI) / 180;
+    // Envelope height when tilted backwards: H*cos(deg) + D*sin(deg) + CartHeight
+    const effHeight = state.objectHeight * Math.cos(rad) + state.objectDepth * Math.sin(rad) + state.cartHeight;
+    // Horizontal footprint extending into room: H*sin(deg) + D*cos(deg)
+    const effLength = state.objectHeight * Math.sin(rad) + state.objectDepth * Math.cos(rad);
+
+    const passesDoor = effHeight <= state.doorHeight;
+    const passesWall = effLength <= state.wallDistance;
+
+    return { effHeight, effLength, passesDoor, passesWall, passes: passesDoor && passesWall };
+  }
+
+  function update() {
+    // 1. In-Room Standup Feasibility Checks
+    const staticUprightHeight = state.objectHeight + state.cartHeight;
+    const tippingDiagonalArc = Math.sqrt(Math.pow(state.objectHeight, 2) + Math.pow(state.objectDepth, 2));
+    const arcTotalCeilingHeight = tippingDiagonalArc + state.cartHeight;
+
+    const passStaticCeiling = staticUprightHeight <= state.ceilingHeight;
+    const passTurningArc = arcTotalCeilingHeight <= state.ceilingHeight;
+    const passUprightWall = state.objectDepth <= state.wallDistance;
+    const passStandupPhase = passStaticCeiling && passTurningArc && passUprightWall;
+
+    // 2. Scan all possible tilt angles (0° to 90°) to find valid range
+    let validMinDeg = null;
+    let validMaxDeg = null;
+
+    for (let deg = 0; deg <= 90; deg++) {
+      const res = calculateClearanceAtTilt(deg);
+      if (res.passes) {
+        if (validMinDeg === null) validMinDeg = deg;
+        validMaxDeg = deg;
+      }
+    }
+
+    const overallPossible = passStandupPhase && (validMinDeg !== null);
+
+    // 3. UI Update
+    const titleEl = document.getElementById('verdict-title');
+    const subtitleEl = document.getElementById('verdict-subtitle');
+    const verdictCard = document.getElementById('main-verdict');
+
+    if (overallPossible) {
+      verdictCard.className = 'main-verdict verdict-pass';
+      if (validMinDeg === 0) {
+        titleEl.textContent = '✓ POSSIBLE: CAN ROLL IN UPRIGHT OR TILTED';
+        subtitleEl.textContent = `No tilt required (0° works), but you can tilt up to ${validMaxDeg}° backwards towards yourself.`;
+      } else {
+        titleEl.textContent = `✓ POSSIBLE: TILT BETWEEN ${validMinDeg}° AND ${validMaxDeg}°`;
+        subtitleEl.textContent = `Tilt the object backwards towards yourself by at least ${validMinDeg}° to pass under the door frame.`;
+      }
+    } else {
+      verdictCard.className = 'main-verdict verdict-fail';
+      titleEl.textContent = '✕ IMPOSSIBLE TO COMPLETE MANEUVER';
+
+      if (!passStandupPhase) {
+        if (!passTurningArc) {
+          subtitleEl.textContent = `Cannot stand upright inside room: Diagonal arc (${formatValue(tippingDiagonalArc)}) hits ceiling (${formatValue(state.ceilingHeight)}).`;
+        } else if (!passStaticCeiling) {
+          subtitleEl.textContent = `Cannot stand upright inside room: Total height (${formatValue(staticUprightHeight)}) exceeds ceiling (${formatValue(state.ceilingHeight)}).`;
+        } else {
+          subtitleEl.textContent = `Cannot stand upright inside room: Object depth (${formatValue(state.objectDepth)}) exceeds wall distance (${formatValue(state.wallDistance)}).`;
+        }
+      } else {
+        subtitleEl.textContent = 'Cannot roll through doorway: Object is too large for door height / facing wall distance at any tilt angle.';
+      }
+    }
+
+    // Update Tilt Breakdown Card
+    document.getElementById('recommended-tilt-val').textContent = validMinDeg !== null ? `${validMinDeg}° backwards` : 'None (Impossible)';
+    document.getElementById('tilt-range-val').textContent = validMinDeg !== null ? `${validMinDeg}° to ${validMaxDeg}°` : 'None';
+    document.getElementById('current-tilt-val').textContent = `${state.manualTilt}°`;
+
+    drawSchematic(overallPossible, validMinDeg, tippingDiagonalArc);
+  }
+
+  function drawSchematic(overallPossible, validMinDeg, tippingDiagonalArc) {
+    const canvas = document.getElementById('schematicCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+
+    const w = rect.width;
+    const h = rect.height;
+    ctx.clearRect(0, 0, w, h);
+
+    const padX = 50;
+    const padY = 40;
+
+    const hallwayWidth = 80;
+    const roomWidth = Math.max(state.wallDistance, state.objectHeight) + 40;
+    const totalW = hallwayWidth + roomWidth;
+    const totalH = Math.max(state.ceilingHeight, state.objectHeight + state.cartHeight) + 30;
+
+    const scale = Math.min((w - padX * 2) / totalW, (h - padY * 2) / totalH);
+
+    const floorY = h - padY;
+    const doorX = padX + hallwayWidth * scale;
+    const wallX = doorX + state.wallDistance * scale;
+    const ceilingY = floorY - state.ceilingHeight * scale;
+    const doorTopY = floorY - state.doorHeight * scale;
+
+    // Hallway
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(padX, 20, doorX - padX, floorY - 20);
+
+    // Floor Line
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(10, floorY);
+    ctx.lineTo(w - 10, floorY);
+    ctx.stroke();
+
+    // Door Header Wall
+    ctx.fillStyle = '#334155';
+    ctx.fillRect(doorX - 6, 10, 12, doorTopY - 10);
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.strokeRect(doorX - 6, 10, 12, doorTopY - 10);
+
+    // Ceiling Line
+    const passTurningArc = (tippingDiagonalArc + state.cartHeight) <= state.ceilingHeight;
+    ctx.strokeStyle = passTurningArc ? '#94a3b8' : '#ef4444';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 6]);
+    ctx.beginPath();
+    ctx.moveTo(doorX, ceilingY);
+    ctx.lineTo(wallX + 20, ceilingY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Facing Wall
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(wallX, floorY);
+    ctx.lineTo(wallX, ceilingY - 10);
+    ctx.stroke();
+
+    const cartH = state.cartHeight * scale;
+    const objW = state.objectDepth * scale;
+    const objH = state.objectHeight * scale;
+
+    // 1. Draw Tilted Object Rolling at Manual Tilt
+    const entryX = doorX - 10;
+    const cartY = floorY - cartH;
+
+    const currentRes = calculateClearanceAtTilt(state.manualTilt);
+
+    // Cart base
+    ctx.fillStyle = '#0284c7';
+    ctx.fillRect(entryX, cartY, Math.max(objW, 25), cartH);
+
+    // Tilted profile (tilted backwards towards hallway / left operator)
+    ctx.save();
+    ctx.translate(entryX, cartY);
+    const rad = (-state.manualTilt * Math.PI) / 180;
+    ctx.rotate(rad);
+
+    ctx.fillStyle = currentRes.passes ? 'rgba(56, 189, 248, 0.4)' : 'rgba(239, 68, 68, 0.4)';
+    ctx.strokeStyle = currentRes.passes ? '#38bdf8' : '#ef4444';
+    ctx.lineWidth = 2;
+    ctx.fillRect(0, -objH, objW, objH);
+    ctx.strokeRect(0, -objH, objW, objH);
+    ctx.restore();
+
+    // 2. Draw Target Upright Position inside Room
+    const uprightX = Math.min(doorX + 35, wallX - objW - 10);
+    if (uprightX > doorX) {
+      // Cart Ghost
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(uprightX, cartY, Math.max(objW, 25), cartH);
+
+      // Upright Ghost Object
+      const passStandup = (state.objectHeight + state.cartHeight <= state.ceilingHeight) && passTurningArc && (state.objectDepth <= state.wallDistance);
+      ctx.fillStyle = passStandup ? 'rgba(34, 197, 94, 0.35)' : 'rgba(239, 68, 68, 0.35)';
+      ctx.strokeStyle = passStandup ? '#22c55e' : '#ef4444';
+      ctx.setLineDash([4, 4]);
+      ctx.fillRect(uprightX, floorY - cartH - objH, objW, objH);
+      ctx.strokeRect(uprightX, floorY - cartH - objH, objW, objH);
+      ctx.setLineDash([]);
+
+      // Turning Arc Line
+      ctx.strokeStyle = passTurningArc ? 'rgba(234, 179, 8, 0.8)' : '#ef4444';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.arc(uprightX, cartY, tippingDiagonalArc * scale, Math.PI, 1.5 * Math.PI);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }
+
+  renderControls();
+  update();
+  window.addEventListener('resize', update);
+</script>
+
+</body>
+</html>
