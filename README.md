@@ -24,17 +24,3 @@ hugo new content posts/my-post.md
 ## Deployment
 
 Every push to `main` runs `.github/workflows/hugo.yml`, which builds the site and publishes it to Pages.
-
-One-time setup:
-
-1. Repo **Settings → Pages → Build and deployment → Source**: set to **GitHub Actions**.
-2. Push to `main` and check the result at `https://acoster.github.io/`.
-
-## Moving alex.coster.ch from Firebase
-
-Do this once the Pages build looks right:
-
-1. **Settings → Pages → Custom domain**: enter `alex.coster.ch`.
-2. At the DNS provider for `coster.ch`, point `alex` at GitHub with a `CNAME` record to `acoster.github.io.` (replacing the Firebase records).
-3. Wait for the certificate, then tick **Enforce HTTPS**.
-4. Remove the Firebase Hosting site once traffic has moved.
