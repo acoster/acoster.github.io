@@ -24,10 +24,6 @@ disableKinds = ["taxonomy", "term"]
     url = "https://mas.to/@coster"
     icon = "mastodon.svg"
     rel = "me"
-  [[params.links]]
-    name = "Keybase"
-    url = "https://keybase.io/acoster"
-    icon = "keybase.png"
 
 [markup.goldmark.renderer]
   unsafe = false
