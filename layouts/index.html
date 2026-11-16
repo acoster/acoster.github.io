@@ -1,0 +1,35 @@
+{{ define "main" }}
+<section class="intro">
+  <h1>{{ .Title }}</h1>
+  {{ with site.Params.tagline }}<p class="tagline">{{ . }}</p>{{ end }}
+</section>
+
+<div class="prose">
+  {{ .Content }}
+</div>
+
+{{ with site.RegularPages }}
+<section>
+  <h2>Writing</h2>
+  <ul class="page-list">
+    {{ range . }}
+    <li>
+      <a href="{{ .RelPermalink }}">{{ .Title }}</a>
+      {{ if not .Date.IsZero }}<time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "Jan 2006" }}</time>{{ end }}
+    </li>
+    {{ end }}
+  </ul>
+</section>
+{{ end }}
+
+{{ with site.Params.links }}
+<section>
+  <h2>Elsewhere</h2>
+  <ul class="links">
+    {{ range . }}
+    <li><a href="{{ .url }}" rel="me">{{ .name }}</a></li>
+    {{ end }}
+  </ul>
+</section>
+{{ end }}
+{{ end }}

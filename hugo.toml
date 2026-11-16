@@ -1,0 +1,21 @@
+baseURL = "https://alex.coster.ch/"
+languageCode = "en"
+title = "Alex Coster"
+enableRobotsTXT = true
+disableKinds = ["taxonomy", "term"]
+
+[params]
+  description = "Alex Coster's homepage."
+  tagline = "Software engineer in Zurich."
+
+  # Shown on the home page, in this order.
+  [[params.links]]
+    name = "GitHub"
+    url = "https://github.com/acoster"
+
+[markup.goldmark.renderer]
+  unsafe = false
+
+# Keeps processed assets between CI runs (see .github/workflows/hugo.yml).
+[caches.images]
+  dir = ":cacheDir/images"
