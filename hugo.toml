@@ -6,12 +6,28 @@ disableKinds = ["taxonomy", "term"]
 
 [params]
   description = "Alex Coster's homepage."
-  tagline = "Software engineer in Zurich."
 
-  # Shown on the home page, in this order.
+  # Icon links shown on the home page, in this order.
+  # icon: file in static/assets/. rel: optional (Mastodon needs "me" for profile verification).
+  # invertOnDark: flip a black icon to white in dark mode.
+  [[params.links]]
+    name = "LinkedIn"
+    url = "https://ch.linkedin.com/in/acoster"
+    icon = "linkedin.png"
   [[params.links]]
     name = "GitHub"
     url = "https://github.com/acoster"
+    icon = "github.png"
+    invertOnDark = true
+  [[params.links]]
+    name = "Mastodon"
+    url = "https://mas.to/@coster"
+    icon = "mastodon.svg"
+    rel = "me"
+  [[params.links]]
+    name = "Keybase"
+    url = "https://keybase.io/acoster"
+    icon = "keybase.png"
 
 [markup.goldmark.renderer]
   unsafe = false

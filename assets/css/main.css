@@ -34,7 +34,7 @@ body {
   max-width: var(--measure);
   background: var(--bg);
   color: var(--text);
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: "Averia Libre", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   line-height: 1.6;
 }
 
@@ -61,11 +61,8 @@ h1 {
 }
 
 h2 {
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--muted);
-  margin: 2.5rem 0 0.75rem;
+  font-size: 1.4rem;
+  margin: 2rem 0 0.5rem;
 }
 
 .site-header {
@@ -88,11 +85,6 @@ h2 {
   gap: 1rem;
 }
 
-.intro {
-  margin-bottom: 1.5rem;
-}
-
-.tagline,
 .meta {
   color: var(--muted);
   margin: 0;
@@ -125,7 +117,7 @@ h2 {
 }
 
 .page-list,
-.links {
+.social {
   list-style: none;
   padding: 0;
   margin: 0;
@@ -147,10 +139,28 @@ h2 {
   font-variant-numeric: tabular-nums;
 }
 
-.links {
+.social {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 1.25rem;
+  margin-top: 2rem;
+}
+
+.social a {
+  display: block;
+}
+
+.social img {
+  display: block;
+  height: 32px;
+  width: auto;
+}
+
+@media (prefers-color-scheme: dark) {
+  .social img.invert-on-dark {
+    filter: invert(1);
+  }
 }
 
 .site-footer {
