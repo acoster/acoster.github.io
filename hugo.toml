@@ -31,3 +31,6 @@ disableKinds = ["taxonomy", "term"]
 # Keeps processed assets between CI runs (see .github/workflows/hugo.yml).
 [caches.images]
   dir = ":cacheDir/images"
+
+[services.googleAnalytics]
+  id = "G-L9HPC8TLTY"
