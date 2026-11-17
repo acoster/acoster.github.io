@@ -170,3 +170,7 @@ h2 {
   color: var(--muted);
   font-size: 0.8rem;
 }
+
+.site-footer a {
+  color: inherit;
+}
