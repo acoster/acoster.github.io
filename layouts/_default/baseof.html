@@ -18,7 +18,7 @@
     {{ block "main" . }}{{ end }}
   </main>
   <footer class="site-footer">
-    <p>&copy; {{ now.Year }} {{ site.Title }}</p>
+    <p>&copy; {{ now.Year }} {{ site.Title }}{{ with site.Home.OutputFormats.Get "rss" }} · <a href="{{ .RelPermalink }}">RSS</a>{{ end }}</p>
   </footer>
 </body>
 </html>
